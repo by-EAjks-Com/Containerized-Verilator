@@ -80,7 +80,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Definitions/Core/Dockerfile
+          file: ./containers/verilator/Dockerfile
           tags: ${{steps.extract-metadata.outputs.tags}}
           labels: ${{steps.extract-metadata.outputs.labels}}
           push: ${{github.event_name != 'pull_request'}}
