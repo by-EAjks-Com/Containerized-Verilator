@@ -30,8 +30,9 @@ RUN apt update \
         python3 \
         flex \
         bison \
-        help2man \
- && WORKDIR=$(mktemp --directory) \
+        help2man
+
+RUN WORKDIR=$(mktemp --directory) \
  && git clone --branch ${GIT_BRANCH} https://github.com/verilator/verilator ${WORKDIR} \
  && cd ${WORKDIR} \
  && autoconf \

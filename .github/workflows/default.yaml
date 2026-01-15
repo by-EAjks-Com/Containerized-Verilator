@@ -80,12 +80,15 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Definitions/Core/Dockerfile
+          file: ./containers/verilator/Dockerfile
           tags: ${{steps.extract-metadata.outputs.tags}}
           labels: ${{steps.extract-metadata.outputs.labels}}
           push: ${{github.event_name != 'pull_request'}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       # https://github.com/aquasecurity/trivy-action/tags
       - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{env.IMAGE_REPOSITORY}}/${{env.IMAGE_NAME}}@${{steps.build-push.outputs.digest}}
@@ -94,6 +97,7 @@ jobs:
           severity: CRITICAL,HIGH,MEDIUM
       # https://github.com/codeql-action/upload-sarif/tags
       - name: Upload Trivy scan results to GitHub Security
+        if: github.event_name != 'pull_request'
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy-results.sarif
