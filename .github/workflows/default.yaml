@@ -21,7 +21,7 @@ on:
     branches:
       - 'main'
     tags:
-      - 'v\d+.\d+.\d+'
+      - 'v\d+.\d+-\d+'
   pull_request:
     branches:
       - 'main'
@@ -69,11 +69,21 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,prefix=pr-,event=pr
-            type=match,pattern=\d+.\d+.\d+
-            type=match,pattern=\d+.\d+
-            type=match,pattern=\d+
+            type=match,pattern=v\d+.\d+-\d+
+            type=match,pattern=v\d+.\d+
+            type=match,pattern=v\d+
             type=sha,prefix=sha-,format=short
             type=raw,value=latest,enable={{is_default_branch}}
+      # Extract tag version for build argument
+      - id: extract-tag
+        name: Extract tag version
+        run: |
+          if [[ "${{github.ref}}" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            echo "git-branch=${TAG}" >> $GITHUB_OUTPUT
+          else
+            echo "git-branch=" >> $GITHUB_OUTPUT
+          fi
       # https://github.com/docker/build-push-action/tags
       - id: build-and-push
         name: Build and push the container image
@@ -83,6 +93,8 @@ jobs:
           file: ./containers/verilator/Dockerfile
           tags: ${{steps.extract-metadata.outputs.tags}}
           labels: ${{steps.extract-metadata.outputs.labels}}
+          build-args: |
+            GIT_BRANCH=${{steps.extract-tag.outputs.git-branch}}
           push: ${{github.event_name != 'pull_request'}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
