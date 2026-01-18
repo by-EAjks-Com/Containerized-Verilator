@@ -39,6 +39,16 @@ jobs:
       id-token: write
       security-events: write
     steps:
+      - id: extract-tag
+        name: Extract tag version
+        run: |
+          if [[ "${{github.ref}}" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG%-*}
+            echo "git-branch=${VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "git-branch=" >> $GITHUB_OUTPUT
+          fi
       # https://github.com/actions/checkout/tags
       - name: Checkout the Git repository
         uses: actions/checkout@v6
@@ -74,16 +84,6 @@ jobs:
             type=match,pattern=v\d+
             type=sha,prefix=sha-,format=short
             type=raw,value=latest,enable={{is_default_branch}}
-      # Extract tag version for build argument
-      - id: extract-tag
-        name: Extract tag version
-        run: |
-          if [[ "${{github.ref}}" == refs/tags/* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            echo "git-branch=${TAG}" >> $GITHUB_OUTPUT
-          else
-            echo "git-branch=" >> $GITHUB_OUTPUT
-          fi
       # https://github.com/docker/build-push-action/tags
       - id: build-and-push
         name: Build and push the container image
